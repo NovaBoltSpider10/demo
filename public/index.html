@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TourMarket - Portal Directory</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f7fb;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px 20px;
+    }
+    .header { text-align: center; max-width: 680px; margin-bottom: 36px; }
+    .header h1 { color: #0056b3; margin: 0 0 10px; font-size: 32px; }
+    .header p { color: #555; margin: 0; font-size: 16px; line-height: 1.5; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 960px;
+    }
+    .section-label {
+      grid-column: 1 / -1;
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #667085;
+      margin-top: 12px;
+      border-bottom: 1px solid #dce3ec;
+      padding-bottom: 6px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid #e6ecf5;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 86, 179, 0.12);
+      border-color: #0056b3;
+    }
+    .card h2 { color: #0056b3; margin: 0 0 8px; font-size: 19px; }
+    .card p { color: #555; margin: 0 0 16px; font-size: 14px; line-height: 1.45; }
+    .card .cta { color: #0056b3; font-weight: bold; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>TourMarket</h1>
+    <p>Select a portal below to sign in as a customer, request a private tour, manage fleet partners, or dispatch bookings.</p>
+  </div>
+
+  <div class="grid">
+    <div class="section-label">Customer Experience</div>
+
+    <a class="card" href="customer.html">
+      <div>
+        <h2>Customer Sign In & Account</h2>
+        <p>Sign in with your email or register a new traveler account, update your profile, and view your trips.</p>
+      </div>
+      <span class="cta">Open Customer Portal →</span>
+    </a>
+
+    <a class="card" href="tour_request.html">
+      <div>
+        <h2>Request a Tour</h2>
+        <p>Choose your pickup, destination, dates, and preferred vehicle type to submit or update a tour request.</p>
+      </div>
+      <span class="cta">Plan a Tour →</span>
+    </a>
+
+    <div class="section-label">Fleet Partner Portals</div>
+
+    <a class="card" href="fleet_business.html">
+      <div>
+        <h2>Fleet Businesses</h2>
+        <p>Register a transportation company, update operating hours and contact details, or browse partners.</p>
+      </div>
+      <span class="cta">Manage Fleet Partners →</span>
+    </a>
+
+    <a class="card" href="driver.html">
+      <div>
+        <h2>Drivers</h2>
+        <p>Onboard drivers to a fleet, toggle availability, and manage driver ratings and experience.</p>
+      </div>
+      <span class="cta">Manage Drivers →</span>
+    </a>
+
+    <a class="card" href="vehicle.html">
+      <div>
+        <h2>Vehicles</h2>
+        <p>Add fleet vehicles, set passenger capacity and hourly rates, and search available inventory.</p>
+      </div>
+      <span class="cta">Manage Vehicles →</span>
+    </a>
+
+    <div class="section-label">Dispatch & Operations</div>
+
+    <a class="card" href="booking.html">
+      <div>
+        <h2>Dispatch & Bookings</h2>
+        <p>Assign verified fleet drivers and vehicles to matched tour requests and track trip status and fares.</p>
+      </div>
+      <span class="cta">Open Dispatch Desk →</span>
+    </a>
+    <a class="card" href="reports.html">
+      <div>
+        <h2>System Reports & Summary</h2>
+        <p>View live database counts, non-cancelled booking revenue, and per-fleet driver, vehicle, and booking breakdowns.</p>
+      </div>
+      <span class="cta">View Reports →</span>
+    </a>
+  </div>
+</body>
+</html>

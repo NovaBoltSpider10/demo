@@ -1,0 +1,391 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TourMarket - Request a Private Tour</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7fb; color: #333; }
+    .topbar {
+      background: #0056b3;
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; margin-left: 16px; }
+    .container { max-width: 1020px; margin: 32px auto; padding: 0 20px; }
+    h1, h2 { color: #0056b3; margin-top: 0; }
+    form { background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+    input, select { width: 100%; padding: 9px; border: 1px solid #ccd4e0; border-radius: 6px; font-size: 14px; }
+    button { background: #0056b3; color: white; padding: 9px 15px; border: none; border-radius: 6px; cursor: pointer; margin-right: 6px; font-weight: bold; }
+    button:hover { background: #004085; }
+    button.secondary { background: #6c757d; }
+    button.danger { background: #c82333; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+    .toolbar input, .toolbar select { max-width: 240px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    th, td { padding: 12px 14px; border-bottom: 1px solid #e6ecf5; text-align: left; font-size: 14px; }
+    th { background-color: #0056b3; color: white; }
+    .alert { padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
+    .alert.error { background: #f8d7da; color: #721c24; }
+    .alert.success { background: #d4edda; color: #155724; }
+    .session-bar {
+      background: #e7f1ff;
+      border: 1px solid #bfd7ff;
+      color: #004085;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>TourMarket</strong>  |  Request a Private Tour</div>
+    <div>
+      <a href="index.html">All Portals</a>
+      <a href="customer.html">Traveler Account</a>
+      <a href="booking.html">Dispatch Desk</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+
+    <form id="request-form">
+      <h2 id="form-title">Plan Your Tour</h2>
+      <div class="session-bar" id="session-bar">
+        <span id="session-text">Select your traveler account below or sign in first.</span>
+        <a href="customer.html" style="color:#0056b3; font-weight:bold;">Switch Traveler →</a>
+      </div>
+
+      <input type="hidden" id="editing_id">
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="customer_user_id">Traveler Account</label>
+          <select id="customer_user_id" required></select>
+        </div>
+        <div class="form-group">
+          <label for="matched_fleet_business_id">Preferred / Matched Fleet Partner (optional)</label>
+          <select id="matched_fleet_business_id">
+            <option value="">-- Open to Any Fleet Partner --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="pickup_location">Pickup Location</label>
+          <input type="text" id="pickup_location" placeholder="e.g., DFW Airport Terminal D" required>
+        </div>
+        <div class="form-group">
+          <label for="destination_location">Destination Location</label>
+          <input type="text" id="destination_location" placeholder="e.g., Downtown Dallas Arts District" required>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="tour_start_date">Start Date & Time</label>
+          <input type="datetime-local" id="tour_start_date" required>
+        </div>
+        <div class="form-group">
+          <label for="tour_end_date">End Date & Time</label>
+          <input type="datetime-local" id="tour_end_date" required>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="tour_duration_option">Package / Duration</label>
+          <select id="tour_duration_option" required>
+            <option value="Half Day (4 Hours)">Half Day (4 Hours)</option>
+            <option value="Full Day (8 Hours)">Full Day (8 Hours)</option>
+            <option value="Airport Transfer">Airport Transfer</option>
+            <option value="Multi-Day Charter">Multi-Day Charter</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="vehicle_type">Preferred Vehicle Type</label>
+          <select id="vehicle_type">
+            <option value="">Any Vehicle Type</option>
+            <option value="Sedan">Sedan</option>
+            <option value="SUV">SUV</option>
+            <option value="Van">Van</option>
+            <option value="Mini Bus">Mini Bus</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="bags_count">Luggage / Bags Count</label>
+          <input type="number" id="bags_count" min="0" value="1">
+        </div>
+        <div class="form-group">
+          <label for="contact_phone">Day-of-Trip Contact Phone</label>
+          <input type="tel" id="contact_phone" required>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="fare">Estimated / Quoted Fare ($, optional)</label>
+          <input type="number" step="0.01" min="0" id="fare" placeholder="e.g., 120.00">
+        </div>
+        <div class="form-group" id="status-group" style="display:none;">
+          <label for="status">Request Status</label>
+          <select id="status">
+            <option value="Pending">Pending</option>
+            <option value="Matched">Matched</option>
+            <option value="Booked">Booked</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit">Submit Tour Request</button>
+      <button type="button" class="secondary" id="cancel-btn" style="display:none;">Cancel Edit</button>
+    </form>
+
+    <h2>Submitted Tour Requests</h2>
+    <div class="toolbar">
+      <input type="text" id="search-input" placeholder="Search pickup, destination, phone...">
+      <select id="status-filter">
+        <option value="">All Statuses</option>
+        <option value="Pending">Pending</option>
+        <option value="Matched">Matched</option>
+        <option value="Booked">Booked</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      <button type="button" id="filter-btn">Filter</button>
+      <button type="button" class="secondary" id="reset-btn">Reset</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Req #</th>
+          <th>Traveler</th>
+          <th>Route</th>
+          <th>Start Date</th>
+          <th>Status</th>
+          <th>Matched Fleet</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="request-tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'tourmarket_customer_id';
+    const form = document.getElementById('request-form');
+    const tbody = document.getElementById('request-tbody');
+    const alertEl = document.getElementById('alert');
+    let customers = [];
+
+    function showAlert(msg, type = 'error') {
+      alertEl.textContent = msg;
+      alertEl.className = `alert ${type}`;
+      alertEl.style.display = 'block';
+    }
+    function clearAlert() { alertEl.style.display = 'none'; }
+
+    function toInputDateTime(sqlDt) {
+      if (!sqlDt) return '';
+      return String(sqlDt).replace(' ', 'T').slice(0, 16);
+    }
+
+    async function loadDropdowns() {
+      const [custRes, fleetRes] = await Promise.all([fetch('/api/customers'), fetch('/api/fleets')]);
+      customers = await custRes.json();
+      const fleets = await fleetRes.json();
+
+      const custSel = document.getElementById('customer_user_id');
+      custSel.innerHTML = '<option value="">-- Select Traveler --</option>';
+      for (const c of customers) {
+        const opt = document.createElement('option');
+        opt.value = c.customer_user_id;
+        opt.textContent = `${c.first_name} ${c.last_name} (#${c.customer_user_id})`;
+        custSel.appendChild(opt);
+      }
+
+      const fleetSel = document.getElementById('matched_fleet_business_id');
+      fleetSel.innerHTML = '<option value="">-- Open to Any Fleet Partner --</option>';
+      for (const f of fleets) {
+        const opt = document.createElement('option');
+        opt.value = f.fleet_business_id;
+        opt.textContent = `${f.business_name} (#${f.fleet_business_id})`;
+        fleetSel.appendChild(opt);
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const activeId = params.get('customer_id') || localStorage.getItem(STORAGE_KEY);
+      if (activeId) {
+        custSel.value = activeId;
+        applyCustomerDefaults(activeId);
+      }
+    }
+
+    function applyCustomerDefaults(custId) {
+      const c = customers.find((x) => String(x.customer_user_id) === String(custId));
+      if (c) {
+        document.getElementById('session-text').textContent = `Booking as ${c.first_name} ${c.last_name} (${c.email})`;
+        if (!document.getElementById('contact_phone').value) {
+          document.getElementById('contact_phone').value = c.phone;
+        }
+      }
+    }
+
+    document.getElementById('customer_user_id').addEventListener('change', (e) => {
+      applyCustomerDefaults(e.target.value);
+    });
+
+    function resetForm() {
+      form.reset();
+      document.getElementById('bags_count').value = '1';
+      document.getElementById('editing_id').value = '';
+      document.getElementById('form-title').textContent = 'Plan Your Tour';
+      document.getElementById('status-group').style.display = 'none';
+      document.getElementById('cancel-btn').style.display = 'none';
+      const activeId = localStorage.getItem(STORAGE_KEY);
+      if (activeId) {
+        document.getElementById('customer_user_id').value = activeId;
+        applyCustomerDefaults(activeId);
+      }
+    }
+    document.getElementById('cancel-btn').addEventListener('click', resetForm);
+
+    async function loadRequests() {
+      clearAlert();
+      const q = encodeURIComponent(document.getElementById('search-input').value.trim());
+      const status = encodeURIComponent(document.getElementById('status-filter').value);
+      const res = await fetch(`/api/tour-requests?q=${q}&status=${status}`);
+      const rows = await res.json();
+      tbody.innerHTML = '';
+
+      for (const r of rows) {
+        const tr = document.createElement('tr');
+        const traveler = r.customer_name ? `${r.customer_name} (#${r.customer_user_id})` : `Customer #${r.customer_user_id}`;
+        const fleetLabel = r.matched_fleet_business_id
+          ? `${r.matched_fleet_name || 'Fleet'} (#${r.matched_fleet_business_id})`
+          : 'Unassigned';
+
+        [
+          `#${r.tour_request_id}`,
+          traveler,
+          `${r.pickup_location} → ${r.destination_location}`,
+          r.tour_start_date,
+          r.status,
+          fleetLabel
+        ].forEach((val) => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+
+        const actionsTd = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit / Match';
+        editBtn.type = 'button';
+        editBtn.onclick = () => {
+          document.getElementById('editing_id').value = r.tour_request_id;
+          document.getElementById('customer_user_id').value = r.customer_user_id;
+          document.getElementById('matched_fleet_business_id').value = r.matched_fleet_business_id ?? '';
+          document.getElementById('pickup_location').value = r.pickup_location;
+          document.getElementById('destination_location').value = r.destination_location;
+          document.getElementById('tour_duration_option').value = r.tour_duration_option;
+          document.getElementById('tour_start_date').value = toInputDateTime(r.tour_start_date);
+          document.getElementById('tour_end_date').value = toInputDateTime(r.tour_end_date);
+          document.getElementById('vehicle_type').value = r.vehicle_type || '';
+          document.getElementById('bags_count').value = r.bags_count;
+          document.getElementById('contact_phone').value = r.contact_phone;
+          document.getElementById('fare').value = r.fare ?? '';
+          document.getElementById('status').value = r.status;
+          document.getElementById('status-group').style.display = 'block';
+          document.getElementById('form-title').textContent = `Update Tour Request #${r.tour_request_id}`;
+          document.getElementById('cancel-btn').style.display = 'inline-block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Cancel';
+        delBtn.type = 'button';
+        delBtn.className = 'danger';
+        delBtn.onclick = async () => {
+          if (!confirm(`Delete Tour Request #${r.tour_request_id}?`)) return;
+          const delRes = await fetch(`/api/tour-requests/${r.tour_request_id}`, { method: 'DELETE' });
+          if (!delRes.ok) {
+            const err = await delRes.json();
+            return showAlert(err.error || 'Delete failed');
+          }
+          await loadRequests();
+          showAlert('Tour request removed.', 'success');
+        };
+
+        actionsTd.append(editBtn, delBtn);
+        tr.appendChild(actionsTd);
+        tbody.appendChild(tr);
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+      const id = document.getElementById('editing_id').value;
+      const fleetVal = document.getElementById('matched_fleet_business_id').value;
+      const statusVal = id
+        ? document.getElementById('status').value
+        : (fleetVal ? 'Matched' : 'Pending');
+
+      const payload = {
+        customer_user_id: document.getElementById('customer_user_id').value,
+        matched_fleet_business_id: fleetVal,
+        pickup_location: document.getElementById('pickup_location').value.trim(),
+        destination_location: document.getElementById('destination_location').value.trim(),
+        tour_duration_option: document.getElementById('tour_duration_option').value,
+        tour_start_date: document.getElementById('tour_start_date').value,
+        tour_end_date: document.getElementById('tour_end_date').value,
+        vehicle_type: document.getElementById('vehicle_type').value,
+        bags_count: document.getElementById('bags_count').value,
+        contact_phone: document.getElementById('contact_phone').value.trim(),
+        fare: document.getElementById('fare').value,
+        status: statusVal
+      };
+
+      const res = await fetch(id ? `/api/tour-requests/${id}` : '/api/tour-requests', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) return showAlert(data.error || 'Save failed');
+
+      resetForm();
+      await loadRequests();
+      showAlert(id ? 'Tour request updated.' : 'Tour request submitted!', 'success');
+    });
+
+    document.getElementById('filter-btn').addEventListener('click', loadRequests);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      document.getElementById('search-input').value = '';
+      document.getElementById('status-filter').value = '';
+      loadRequests();
+    });
+
+    loadDropdowns().then(loadRequests);
+  </script>
+</body>
+</html>

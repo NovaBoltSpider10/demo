@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TourMarket - Dispatch & Bookings</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7fb; color: #333; }
+    .topbar {
+      background: #0056b3;
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; margin-left: 16px; }
+    .container { max-width: 1020px; margin: 32px auto; padding: 0 20px; }
+    h1, h2 { color: #0056b3; margin-top: 0; }
+    form { background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+    input, select { width: 100%; padding: 9px; border: 1px solid #ccd4e0; border-radius: 6px; font-size: 14px; }
+    button { background: #0056b3; color: white; padding: 9px 15px; border: none; border-radius: 6px; cursor: pointer; margin-right: 6px; font-weight: bold; }
+    button:hover { background: #004085; }
+    button.secondary { background: #6c757d; }
+    button.danger { background: #c82333; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+    .toolbar input, .toolbar select { max-width: 220px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    th, td { padding: 12px 14px; border-bottom: 1px solid #e6ecf5; text-align: left; font-size: 14px; }
+    th { background-color: #0056b3; color: white; }
+    .alert { padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
+    .alert.error { background: #f8d7da; color: #721c24; }
+    .alert.success { background: #d4edda; color: #155724; }
+    .hint { font-size: 13px; color: #555; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>TourMarket</strong>  |  Dispatch & Bookings Desk</div>
+    <div>
+      <a href="index.html">All Portals</a>
+      <a href="tour_request.html">Tour Requests</a>
+      <a href="driver.html">Drivers</a>
+      <a href="vehicle.html">Vehicles</a>
+      <a href="reports.html">Reports</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+
+    <form id="booking-form">
+      <h2 id="form-title">Confirm & Dispatch Booking</h2>
+      <p class="hint">Note: The selected Tour Request must have a matched fleet, and both the Driver and Vehicle must belong to that same fleet.</p>
+      <input type="hidden" id="editing_id">
+
+      <div class="form-group">
+        <label for="tour_request_id">Tour Request</label>
+        <select id="tour_request_id" required></select>
+      </div>
+
+      <div class="form-group">
+        <label style="display:inline-flex; align-items:center; gap:8px; font-weight:normal; cursor:pointer;">
+          <input type="checkbox" id="filter-by-fleet" checked style="width:auto;">
+          Filter drivers & vehicles to selected request's matched fleet (uncheck to test mismatch trigger)
+        </label>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="driver_id">Assigned Driver</label>
+          <select id="driver_id" required></select>
+        </div>
+        <div class="form-group">
+          <label for="vehicle_id">Assigned Vehicle</label>
+          <select id="vehicle_id" required></select>
+        </div>
+        <div class="form-group">
+          <label for="start_time">Actual / Scheduled Start Time (optional)</label>
+          <input type="datetime-local" id="start_time">
+        </div>
+        <div class="form-group">
+          <label for="end_time">Actual / Scheduled End Time (optional)</label>
+          <input type="datetime-local" id="end_time">
+        </div>
+        <div class="form-group">
+          <label for="distance">Distance (mi / km, optional)</label>
+          <input type="number" step="0.01" min="0" id="distance" placeholder="e.g., 28.5">
+        </div>
+        <div class="form-group">
+          <label for="fare">Final Fare ($)</label>
+          <input type="number" step="0.01" min="0" id="fare" placeholder="e.g., 140.00">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="status">Trip Status</label>
+        <select id="status">
+          <option value="Scheduled">Scheduled</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <button type="submit">Save Booking</button>
+      <button type="button" class="secondary" id="cancel-btn" style="display:none;">Cancel Edit</button>
+    </form>
+
+    <h2>Dispatched Bookings</h2>
+    <div class="toolbar">
+      <input type="text" id="search-input" placeholder="Search booking/request #, driver, plate...">
+      <select id="status-filter">
+        <option value="">All Statuses</option>
+        <option value="Scheduled">Scheduled</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      <button type="button" id="filter-btn">Filter</button>
+      <button type="button" class="secondary" id="reset-btn">Reset</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Booking #</th>
+          <th>Request #</th>
+          <th>Driver</th>
+          <th>Vehicle</th>
+          <th>Status</th>
+          <th>Final Fare</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="booking-tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById('booking-form');
+    const tbody = document.getElementById('booking-tbody');
+    const alertEl = document.getElementById('alert');
+    let allRequests = [];
+    let allDrivers = [];
+    let allVehicles = [];
+
+    function showAlert(msg, type = 'error') {
+      alertEl.textContent = msg;
+      alertEl.className = `alert ${type}`;
+      alertEl.style.display = 'block';
+    }
+    function clearAlert() { alertEl.style.display = 'none'; }
+
+    async function safeJson(res, fallbackMsg = 'Request failed.') {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || fallbackMsg);
+      return data;
+    }
+
+    function toInputDateTime(sqlDt) {
+      if (!sqlDt) return '';
+      return String(sqlDt).replace(' ', 'T').slice(0, 16);
+    }
+
+    function populateDispatchSelects(preserveDriverId = '', preserveVehicleId = '') {
+      const reqId = document.getElementById('tour_request_id').value;
+      const filterByFleet = document.getElementById('filter-by-fleet').checked;
+      const selectedReq = allRequests.find((r) => String(r.tour_request_id) === String(reqId));
+      const targetFleetId = filterByFleet && selectedReq && selectedReq.matched_fleet_business_id
+        ? Number(selectedReq.matched_fleet_business_id)
+        : null;
+
+      const drvSel = document.getElementById('driver_id');
+      drvSel.innerHTML = '<option value="">-- Select Driver --</option>';
+      for (const d of allDrivers) {
+        if (targetFleetId !== null && Number(d.fleet_business_id) !== targetFleetId) continue;
+        const opt = document.createElement('option');
+        opt.value = d.driver_id;
+        opt.textContent = `#${d.driver_id}: ${d.first_name} ${d.last_name} (Fleet #${d.fleet_business_id})${d.available ? '' : ' [Off Duty]'}`;
+        drvSel.appendChild(opt);
+      }
+      if (preserveDriverId) drvSel.value = String(preserveDriverId);
+
+      const vehSel = document.getElementById('vehicle_id');
+      vehSel.innerHTML = '<option value="">-- Select Vehicle --</option>';
+      for (const v of allVehicles) {
+        if (targetFleetId !== null && Number(v.fleet_business_id) !== targetFleetId) continue;
+        const opt = document.createElement('option');
+        opt.value = v.vehicle_id;
+        opt.textContent = `#${v.vehicle_id}: ${v.make} ${v.model} [${v.license_plate}] (Fleet #${v.fleet_business_id}, $${Number(v.hourly_rate).toFixed(2)}/hr)`;
+        vehSel.appendChild(opt);
+      }
+      if (preserveVehicleId) vehSel.value = String(preserveVehicleId);
+    }
+
+    async function loadDropdowns() {
+      try {
+        const [reqRes, drvRes, vehRes] = await Promise.all([
+          fetch('/api/tour-requests'),
+          fetch('/api/drivers'),
+          fetch('/api/vehicles')
+        ]);
+        allRequests = await safeJson(reqRes, 'Failed to load tour requests.');
+        allDrivers = await safeJson(drvRes, 'Failed to load drivers.');
+        allVehicles = await safeJson(vehRes, 'Failed to load vehicles.');
+
+        const reqSel = document.getElementById('tour_request_id');
+        reqSel.innerHTML = '<option value="">-- Select Tour Request --</option>';
+        for (const r of allRequests) {
+          const fleetInfo = r.matched_fleet_business_id
+            ? `Fleet #${r.matched_fleet_business_id} (${r.matched_fleet_name || 'Matched'})`
+            : 'NO FLEET MATCHED';
+          const opt = document.createElement('option');
+          opt.value = r.tour_request_id;
+          opt.textContent = `#${r.tour_request_id}: ${r.pickup_location} → ${r.destination_location} [${fleetInfo}]`;
+          reqSel.appendChild(opt);
+        }
+
+        populateDispatchSelects();
+      } catch (err) {
+        showAlert(err.message);
+      }
+    }
+
+    document.getElementById('tour_request_id').addEventListener('change', (e) => {
+      const req = allRequests.find((r) => String(r.tour_request_id) === String(e.target.value));
+      const fareInput = document.getElementById('fare');
+      if (req && req.fare !== null && req.fare !== undefined && !fareInput.value) {
+        fareInput.value = Number(req.fare).toFixed(2);
+      }
+      populateDispatchSelects();
+    });
+
+    document.getElementById('filter-by-fleet').addEventListener('change', () => {
+      populateDispatchSelects(
+        document.getElementById('driver_id').value,
+        document.getElementById('vehicle_id').value
+      );
+    });
+
+    function resetForm() {
+      form.reset();
+      document.getElementById('filter-by-fleet').checked = true;
+      document.getElementById('editing_id').value = '';
+      document.getElementById('form-title').textContent = 'Confirm & Dispatch Booking';
+      document.getElementById('cancel-btn').style.display = 'none';
+      populateDispatchSelects();
+    }
+    document.getElementById('cancel-btn').addEventListener('click', resetForm);
+
+    async function loadBookings() {
+      clearAlert();
+      try {
+        const q = encodeURIComponent(document.getElementById('search-input').value.trim());
+        const status = encodeURIComponent(document.getElementById('status-filter').value);
+        const res = await fetch(`/api/bookings?q=${q}&status=${status}`);
+        const rows = await safeJson(res, 'Failed to load bookings.');
+        tbody.innerHTML = '';
+
+        for (const b of rows) {
+          const tr = document.createElement('tr');
+          const fareStr = b.fare !== null && b.fare !== undefined ? `$${Number(b.fare).toFixed(2)}` : '-';
+          const driverLabel = b.driver_name ? `${b.driver_name} (#${b.driver_id})` : `#${b.driver_id}`;
+          const vehicleLabel = b.vehicle_label || `#${b.vehicle_id}`;
+
+          [`#${b.booking_id}`, `#${b.tour_request_id}`, driverLabel, vehicleLabel, b.status, fareStr]
+            .forEach((val) => {
+              const td = document.createElement('td');
+              td.textContent = val;
+              tr.appendChild(td);
+            });
+
+          const actionsTd = document.createElement('td');
+          const editBtn = document.createElement('button');
+          editBtn.textContent = 'Edit';
+          editBtn.type = 'button';
+          editBtn.onclick = () => {
+            document.getElementById('editing_id').value = b.booking_id;
+            document.getElementById('tour_request_id').value = b.tour_request_id;
+            document.getElementById('filter-by-fleet').checked = false;
+            populateDispatchSelects(b.driver_id, b.vehicle_id);
+            document.getElementById('start_time').value = toInputDateTime(b.start_time);
+            document.getElementById('end_time').value = toInputDateTime(b.end_time);
+            document.getElementById('distance').value = b.distance ?? '';
+            document.getElementById('fare').value = b.fare ?? '';
+            document.getElementById('status').value = b.status;
+            document.getElementById('form-title').textContent = `Update Booking #${b.booking_id}`;
+            document.getElementById('cancel-btn').style.display = 'inline-block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          };
+
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Delete';
+          delBtn.type = 'button';
+          delBtn.className = 'danger';
+          delBtn.onclick = async () => {
+            if (!confirm(`Delete Booking #${b.booking_id}?`)) return;
+            try {
+              const delRes = await fetch(`/api/bookings/${b.booking_id}`, { method: 'DELETE' });
+              if (!delRes.ok) {
+                const err = await delRes.json().catch(() => ({}));
+                return showAlert(err.error || 'Delete failed');
+              }
+              await loadBookings();
+              showAlert('Booking deleted.', 'success');
+            } catch (err) {
+              showAlert(err.message);
+            }
+          };
+
+          actionsTd.append(editBtn, delBtn);
+          tr.appendChild(actionsTd);
+          tbody.appendChild(tr);
+        }
+      } catch (err) {
+        showAlert(err.message);
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+      const id = document.getElementById('editing_id').value;
+      const payload = {
+        tour_request_id: document.getElementById('tour_request_id').value,
+        driver_id: document.getElementById('driver_id').value,
+        vehicle_id: document.getElementById('vehicle_id').value,
+        start_time: document.getElementById('start_time').value,
+        end_time: document.getElementById('end_time').value,
+        distance: document.getElementById('distance').value,
+        fare: document.getElementById('fare').value,
+        status: document.getElementById('status').value
+      };
+
+      try {
+        const res = await fetch(id ? `/api/bookings/${id}` : '/api/bookings', {
+          method: id ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        await safeJson(res, 'Save failed');
+
+        resetForm();
+        await loadBookings();
+        showAlert(id ? 'Booking updated.' : 'Booking confirmed & dispatched!', 'success');
+      } catch (err) {
+        showAlert(err.message);
+      }
+    });
+
+    document.getElementById('filter-btn').addEventListener('click', loadBookings);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      document.getElementById('search-input').value = '';
+      document.getElementById('status-filter').value = '';
+      loadBookings();
+    });
+
+    loadDropdowns().then(loadBookings);
+  </script>
+</body>
+</html>

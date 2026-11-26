@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TourMarket - Fleet Partner Portal</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7fb; color: #333; }
+    .topbar {
+      background: #0056b3;
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; margin-left: 16px; }
+    .container { max-width: 1020px; margin: 32px auto; padding: 0 20px; }
+    h1, h2 { color: #0056b3; margin-top: 0; }
+    form { background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+    input, textarea { width: 100%; padding: 9px; border: 1px solid #ccd4e0; border-radius: 6px; font-size: 14px; }
+    button { background: #0056b3; color: white; padding: 9px 15px; border: none; border-radius: 6px; cursor: pointer; margin-right: 6px; font-weight: bold; }
+    button:hover { background: #004085; }
+    button.secondary { background: #6c757d; }
+    button.danger { background: #c82333; }
+    .toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
+    .toolbar input { max-width: 320px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    th, td { padding: 12px 14px; border-bottom: 1px solid #e6ecf5; text-align: left; font-size: 14px; }
+    th { background-color: #0056b3; color: white; }
+    .alert { padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
+    .alert.error { background: #f8d7da; color: #721c24; }
+    .alert.success { background: #d4edda; color: #155724; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>TourMarket</strong>  |  Fleet Partner Portal</div>
+    <div>
+      <a href="index.html">All Portals</a>
+      <a href="driver.html">Drivers</a>
+      <a href="vehicle.html">Vehicles</a>
+      <a href="booking.html">Dispatch</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+
+    <form id="fleet-form">
+      <h2 id="form-title">Register Fleet Partner</h2>
+      <input type="hidden" id="editing_id">
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="business_name">Company / Fleet Name</label>
+          <input type="text" id="business_name" required>
+        </div>
+        <div class="form-group">
+          <label for="contact_person">Primary Dispatch Contact</label>
+          <input type="text" id="contact_person" required>
+        </div>
+        <div class="form-group">
+          <label for="business_phone">Business Phone</label>
+          <input type="tel" id="business_phone" required>
+        </div>
+        <div class="form-group">
+          <label for="business_email">Business Email</label>
+          <input type="email" id="business_email" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="operating_hours">Operating Hours</label>
+        <input type="text" id="operating_hours" placeholder="e.g., Mon-Sun 24/7">
+      </div>
+      <div class="form-group">
+        <label for="address">Headquarters / Garage Address</label>
+        <textarea id="address" rows="2" required></textarea>
+      </div>
+      <button type="submit">Save Fleet Partner</button>
+      <button type="button" class="secondary" id="cancel-btn" style="display:none;">Cancel Edit</button>
+    </form>
+
+    <h2>Registered Fleet Partners</h2>
+    <div class="toolbar">
+      <input type="text" id="search-input" placeholder="Search company, contact, email, address...">
+      <button type="button" id="search-btn">Search</button>
+      <button type="button" class="secondary" id="reset-btn">Reset</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Fleet #</th>
+          <th>Company Name</th>
+          <th>Dispatch Contact</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Operating Hours</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="fleet-tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById('fleet-form');
+    const tbody = document.getElementById('fleet-tbody');
+    const alertEl = document.getElementById('alert');
+
+    function showAlert(msg, type = 'error') {
+      alertEl.textContent = msg;
+      alertEl.className = `alert ${type}`;
+      alertEl.style.display = 'block';
+    }
+    function clearAlert() { alertEl.style.display = 'none'; }
+
+    function resetForm() {
+      form.reset();
+      document.getElementById('editing_id').value = '';
+      document.getElementById('form-title').textContent = 'Register Fleet Partner';
+      document.getElementById('cancel-btn').style.display = 'none';
+    }
+    document.getElementById('cancel-btn').addEventListener('click', resetForm);
+
+    async function loadFleets() {
+      clearAlert();
+      const q = encodeURIComponent(document.getElementById('search-input').value.trim());
+      const res = await fetch(`/api/fleets?q=${q}`);
+      const rows = await res.json();
+      tbody.innerHTML = '';
+
+      for (const r of rows) {
+        const tr = document.createElement('tr');
+        [`#${r.fleet_business_id}`, r.business_name, r.contact_person, r.business_phone, r.business_email, r.operating_hours || '-']
+          .forEach((val) => {
+            const td = document.createElement('td');
+            td.textContent = val;
+            tr.appendChild(td);
+          });
+
+        const actionsTd = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.type = 'button';
+        editBtn.onclick = () => {
+          document.getElementById('editing_id').value = r.fleet_business_id;
+          document.getElementById('business_name').value = r.business_name;
+          document.getElementById('contact_person').value = r.contact_person;
+          document.getElementById('business_phone').value = r.business_phone;
+          document.getElementById('business_email').value = r.business_email;
+          document.getElementById('operating_hours').value = r.operating_hours || '';
+          document.getElementById('address').value = r.address;
+          document.getElementById('form-title').textContent = `Update Fleet Partner #${r.fleet_business_id}`;
+          document.getElementById('cancel-btn').style.display = 'inline-block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.type = 'button';
+        delBtn.className = 'danger';
+        delBtn.onclick = async () => {
+          if (!confirm(`Delete Fleet Partner #${r.fleet_business_id}?`)) return;
+          const delRes = await fetch(`/api/fleets/${r.fleet_business_id}`, { method: 'DELETE' });
+          if (!delRes.ok) {
+            const err = await delRes.json();
+            return showAlert(err.error || 'Delete failed');
+          }
+          await loadFleets();
+          showAlert('Fleet partner deleted.', 'success');
+        };
+
+        actionsTd.append(editBtn, delBtn);
+        tr.appendChild(actionsTd);
+        tbody.appendChild(tr);
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+      const id = document.getElementById('editing_id').value;
+      const payload = {
+        business_name: document.getElementById('business_name').value.trim(),
+        contact_person: document.getElementById('contact_person').value.trim(),
+        business_phone: document.getElementById('business_phone').value.trim(),
+        business_email: document.getElementById('business_email').value.trim(),
+        operating_hours: document.getElementById('operating_hours').value.trim(),
+        address: document.getElementById('address').value.trim()
+      };
+
+      const res = await fetch(id ? `/api/fleets/${id}` : '/api/fleets', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) return showAlert(data.error || 'Save failed');
+
+      resetForm();
+      await loadFleets();
+      showAlert(id ? 'Fleet partner updated.' : 'Fleet partner registered.', 'success');
+    });
+
+    document.getElementById('search-btn').addEventListener('click', loadFleets);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      document.getElementById('search-input').value = '';
+      loadFleets();
+    });
+
+    loadFleets();
+  </script>
+</body>
+</html>

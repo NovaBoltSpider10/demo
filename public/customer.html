@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TourMarket - Customer Sign In & Account</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7fb; color: #333; }
+    .topbar {
+      background: #0056b3;
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; margin-left: 16px; }
+    .container { max-width: 920px; margin: 36px auto; padding: 0 20px; }
+    .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 720px) { .auth-grid { grid-template-columns: 1fr; } }
+    .panel {
+      background: #fff;
+      padding: 26px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      margin-bottom: 24px;
+    }
+    h1, h2, h3 { color: #0056b3; margin-top: 0; }
+    .subtitle { color: #666; font-size: 14px; margin-bottom: 18px; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccd4e0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      background: #0056b3;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    button:hover { background: #004085; }
+    button.secondary { background: #6c757d; }
+    button.danger { background: #c82333; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .alert { padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
+    .alert.error { background: #f8d7da; color: #721c24; }
+    .alert.success { background: #d4edda; color: #155724; }
+    .profile-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid #e6ecf5;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .badge {
+      display: inline-block;
+      background: #e7f1ff;
+      color: #0056b3;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e6ecf5; text-align: left; font-size: 14px; }
+    th { background: #f0f4fa; color: #0056b3; }
+    .cta-link {
+      display: inline-block;
+      background: #198754;
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .cta-link:hover { background: #146c43; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>TourMarket</strong>  |  Traveler Portal</div>
+    <div>
+      <a href="index.html">All Portals</a>
+      <a href="tour_request.html">Request a Tour</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+
+    <!-- SIGNED-OUT VIEW: Sign In or Create Account -->
+    <div id="auth-view" class="auth-grid">
+      <div class="panel">
+        <h2>Sign In</h2>
+        <p class="subtitle">Enter the email associated with your TourMarket traveler account.</p>
+        <form id="signin-form">
+          <div class="form-group">
+            <label for="signin-email">Email Address</label>
+            <input type="email" id="signin-email" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="quick-select">Or Quick-Select Existing Traveler (Demo Helper)</label>
+            <select id="quick-select">
+              <option value="">-- Choose an existing account --</option>
+            </select>
+          </div>
+          <button type="submit">Sign In</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Create Traveler Account</h2>
+        <p class="subtitle">New to TourMarket? Register once to request private tours.</p>
+        <form id="register-form">
+          <div class="form-group">
+            <label for="reg-first">First Name</label>
+            <input type="text" id="reg-first" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-last">Last Name</label>
+            <input type="text" id="reg-last" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Email Address</label>
+            <input type="email" id="reg-email" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-phone">Mobile Phone</label>
+            <input type="tel" id="reg-phone" placeholder="(555) 234-5678" required>
+          </div>
+          <button type="submit">Create Account & Sign In</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- SIGNED-IN VIEW: Traveler Profile & Trips -->
+    <div id="account-view" style="display:none;">
+      <div class="panel">
+        <div class="profile-banner">
+          <div>
+            <span class="badge" id="account-badge">Account #</span>
+            <h2 id="welcome-heading" style="margin: 8px 0 4px;">Welcome back</h2>
+            <div class="subtitle" id="welcome-sub" style="margin:0;"></div>
+          </div>
+          <div class="btn-row" style="margin:0;">
+            <a id="new-request-link" class="cta-link" href="tour_request.html">+ Request a New Tour</a>
+            <button type="button" class="secondary" id="signout-btn">Sign Out</button>
+          </div>
+        </div>
+
+        <h3>Profile Details</h3>
+        <form id="profile-form">
+          <div class="auth-grid" style="gap:14px;">
+            <div class="form-group">
+              <label for="prof-first">First Name</label>
+              <input type="text" id="prof-first" required>
+            </div>
+            <div class="form-group">
+              <label for="prof-last">Last Name</label>
+              <input type="text" id="prof-last" required>
+            </div>
+            <div class="form-group">
+              <label for="prof-email">Email Address</label>
+              <input type="email" id="prof-email" required>
+            </div>
+            <div class="form-group">
+              <label for="prof-phone">Mobile Phone</label>
+              <input type="tel" id="prof-phone" required>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="submit">Save Profile Changes</button>
+            <button type="button" class="danger" id="delete-account-btn">Delete My Account</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h3>My Tour Requests</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Request #</th>
+              <th>Route</th>
+              <th>Start Date</th>
+              <th>Vehicle</th>
+              <th>Status</th>
+              <th>Assigned Fleet</th>
+            </tr>
+          </thead>
+          <tbody id="my-requests-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'tourmarket_customer_id';
+    const alertEl = document.getElementById('alert');
+    let allCustomers = [];
+    let currentCustomer = null;
+
+    function showAlert(msg, type = 'error') {
+      alertEl.textContent = msg;
+      alertEl.className = `alert ${type}`;
+      alertEl.style.display = 'block';
+    }
+    function clearAlert() { alertEl.style.display = 'none'; }
+
+    async function fetchCustomers() {
+      const res = await fetch('/api/customers');
+      allCustomers = await res.json();
+      const sel = document.getElementById('quick-select');
+      sel.innerHTML = '<option value="">-- Choose an existing account --</option>';
+      for (const c of allCustomers) {
+        const opt = document.createElement('option');
+        opt.value = c.email;
+        opt.textContent = `${c.first_name} ${c.last_name} (${c.email})`;
+        sel.appendChild(opt);
+      }
+    }
+
+    document.getElementById('quick-select').addEventListener('change', (e) => {
+      if (e.target.value) {
+        document.getElementById('signin-email').value = e.target.value;
+      }
+    });
+
+    async function renderSession() {
+      await fetchCustomers();
+      const savedId = Number(localStorage.getItem(STORAGE_KEY));
+      currentCustomer = allCustomers.find((c) => Number(c.customer_user_id) === savedId) || null;
+
+      if (!currentCustomer) {
+        localStorage.removeItem(STORAGE_KEY);
+        document.getElementById('auth-view').style.display = 'grid';
+        document.getElementById('account-view').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('auth-view').style.display = 'none';
+      document.getElementById('account-view').style.display = 'block';
+
+      document.getElementById('account-badge').textContent = `Traveler ID #${currentCustomer.customer_user_id}`;
+      document.getElementById('welcome-heading').textContent = `Welcome, ${currentCustomer.first_name} ${currentCustomer.last_name}`;
+      document.getElementById('welcome-sub').textContent = `${currentCustomer.email} • ${currentCustomer.phone}`;
+      document.getElementById('new-request-link').href = `tour_request.html?customer_id=${currentCustomer.customer_user_id}`;
+
+      document.getElementById('prof-first').value = currentCustomer.first_name;
+      document.getElementById('prof-last').value = currentCustomer.last_name;
+      document.getElementById('prof-email').value = currentCustomer.email;
+      document.getElementById('prof-phone').value = currentCustomer.phone;
+
+      await loadMyRequests();
+    }
+
+    async function loadMyRequests() {
+      const res = await fetch('/api/tour-requests');
+      const rows = await res.json();
+      const mine = rows.filter((r) => Number(r.customer_user_id) === Number(currentCustomer.customer_user_id));
+      const tbody = document.getElementById('my-requests-tbody');
+      tbody.innerHTML = '';
+
+      if (!mine.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 6;
+        td.textContent = 'You have no tour requests yet. Click "+ Request a New Tour" above to get started.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      for (const r of mine) {
+        const tr = document.createElement('tr');
+        const fleet = r.matched_fleet_name || (r.matched_fleet_business_id ? `Fleet #${r.matched_fleet_business_id}` : 'Matching in progress');
+        [
+          `#${r.tour_request_id}`,
+          `${r.pickup_location} → ${r.destination_location}`,
+          r.tour_start_date,
+          r.vehicle_type || 'Any',
+          r.status,
+          fleet
+        ].forEach((val) => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+    }
+
+    // Sign in by matching email
+    document.getElementById('signin-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+      const email = document.getElementById('signin-email').value.trim().toLowerCase();
+      await fetchCustomers();
+      const match = allCustomers.find((c) => c.email.toLowerCase() === email);
+      if (!match) {
+        return showAlert('No traveler account found with that email. Create a new account on the right.');
+      }
+      localStorage.setItem(STORAGE_KEY, match.customer_user_id);
+      await renderSession();
+      showAlert(`Signed in as ${match.first_name} ${match.last_name}.`, 'success');
+    });
+
+    // Register new customer
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+      const payload = {
+        first_name: document.getElementById('reg-first').value.trim(),
+        last_name: document.getElementById('reg-last').value.trim(),
+        email: document.getElementById('reg-email').value.trim(),
+        phone: document.getElementById('reg-phone').value.trim()
+      };
+      const res = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) return showAlert(data.error || 'Could not create account.');
+
+      e.target.reset();
+      localStorage.setItem(STORAGE_KEY, data.customer_user_id);
+      await renderSession();
+      showAlert('Account created! You are now signed in.', 'success');
+    });
+
+    // Update signed-in customer profile
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+      const payload = {
+        first_name: document.getElementById('prof-first').value.trim(),
+        last_name: document.getElementById('prof-last').value.trim(),
+        email: document.getElementById('prof-email').value.trim(),
+        phone: document.getElementById('prof-phone').value.trim()
+      };
+      const res = await fetch(`/api/customers/${currentCustomer.customer_user_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) return showAlert(data.error || 'Update failed.');
+
+      await renderSession();
+      showAlert('Profile updated.', 'success');
+    });
+
+    // Delete signed-in customer account
+    document.getElementById('delete-account-btn').addEventListener('click', async () => {
+      if (!confirm('Delete your traveler account? Any associated tour requests will also be removed.')) return;
+      const res = await fetch(`/api/customers/${currentCustomer.customer_user_id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json();
+        return showAlert(err.error || 'Could not delete account.');
+      }
+      localStorage.removeItem(STORAGE_KEY);
+      await renderSession();
+      showAlert('Account deleted.', 'success');
+    });
+
+    document.getElementById('signout-btn').addEventListener('click', async () => {
+      localStorage.removeItem(STORAGE_KEY);
+      clearAlert();
+      await renderSession();
+    });
+
+    renderSession();
+  </script>
+</body>
+</html>

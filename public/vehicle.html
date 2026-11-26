@@ -1,0 +1,277 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TourMarket - Vehicle Garage</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7fb; color: #333; }
+    .topbar {
+      background: #0056b3;
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; margin-left: 16px; }
+    .container { max-width: 1020px; margin: 32px auto; padding: 0 20px; }
+    h1, h2 { color: #0056b3; margin-top: 0; }
+    form { background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+    input, select { width: 100%; padding: 9px; border: 1px solid #ccd4e0; border-radius: 6px; font-size: 14px; }
+    button { background: #0056b3; color: white; padding: 9px 15px; border: none; border-radius: 6px; cursor: pointer; margin-right: 6px; font-weight: bold; }
+    button:hover { background: #004085; }
+    button.secondary { background: #6c757d; }
+    button.danger { background: #c82333; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+    .toolbar input { max-width: 240px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    th, td { padding: 12px 14px; border-bottom: 1px solid #e6ecf5; text-align: left; font-size: 14px; }
+    th { background-color: #0056b3; color: white; }
+    .alert { padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
+    .alert.error { background: #f8d7da; color: #721c24; }
+    .alert.success { background: #d4edda; color: #155724; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>TourMarket</strong>  |  Fleet Vehicle Garage</div>
+    <div>
+      <a href="index.html">All Portals</a>
+      <a href="fleet_business.html">Fleet Partners</a>
+      <a href="driver.html">Drivers</a>
+      <a href="booking.html">Dispatch</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+
+    <form id="vehicle-form">
+      <h2 id="form-title">Add Fleet Vehicle</h2>
+      <input type="hidden" id="editing_id">
+
+      <div class="form-group">
+        <label for="fleet_business_id">Owning Fleet Partner</label>
+        <select id="fleet_business_id" required></select>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="make">Make</label>
+          <input type="text" id="make" placeholder="e.g., Toyota" required>
+        </div>
+        <div class="form-group">
+          <label for="model">Model</label>
+          <input type="text" id="model" placeholder="e.g., Sienna" required>
+        </div>
+        <div class="form-group">
+          <label for="model_year">Model Year</label>
+          <input type="number" id="model_year" min="1901" max="2155" placeholder="2025" required>
+        </div>
+        <div class="form-group">
+          <label for="license_plate">License Plate</label>
+          <input type="text" id="license_plate" placeholder="TX-8492" required>
+        </div>
+        <div class="form-group">
+          <label for="color">Color (optional)</label>
+          <input type="text" id="color" placeholder="e.g., Silver">
+        </div>
+        <div class="form-group">
+          <label for="type">Vehicle Type</label>
+          <input type="text" id="type" placeholder="e.g., Sedan, SUV, Van" required>
+        </div>
+        <div class="form-group">
+          <label for="capacity">Passenger Capacity</label>
+          <input type="number" id="capacity" min="1" required>
+        </div>
+        <div class="form-group">
+          <label for="hourly_rate">Hourly Rate ($)</label>
+          <input type="number" step="0.01" min="0" id="hourly_rate" required>
+        </div>
+        <div class="form-group">
+          <label for="vehicle_class">Vehicle Class (optional)</label>
+          <input type="text" id="vehicle_class" placeholder="e.g., Executive, Standard">
+        </div>
+        <div class="form-group">
+          <label for="fuel_type">Fuel Type (optional)</label>
+          <input type="text" id="fuel_type" placeholder="e.g., Hybrid, Gasoline, EV">
+        </div>
+      </div>
+
+      <button type="submit">Save Vehicle</button>
+      <button type="button" class="secondary" id="cancel-btn" style="display:none;">Cancel Edit</button>
+    </form>
+
+    <h2>Vehicle Garage Inventory</h2>
+    <div class="toolbar">
+      <input type="text" id="search-input" placeholder="Search make, model, plate, type...">
+      <input type="number" id="min-cap" placeholder="Min seats" min="1">
+      <button type="button" id="filter-btn">Filter</button>
+      <button type="button" class="secondary" id="reset-btn">Reset</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Vehicle #</th>
+          <th>Fleet Partner</th>
+          <th>Make & Model</th>
+          <th>Year</th>
+          <th>License Plate</th>
+          <th>Seats</th>
+          <th>Hourly Rate</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="vehicle-tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById('vehicle-form');
+    const tbody = document.getElementById('vehicle-tbody');
+    const alertEl = document.getElementById('alert');
+
+    function showAlert(msg, type = 'error') {
+      alertEl.textContent = msg;
+      alertEl.className = `alert ${type}`;
+      alertEl.style.display = 'block';
+    }
+    function clearAlert() { alertEl.style.display = 'none'; }
+
+    async function loadFleetsDropdown() {
+      const res = await fetch('/api/fleets');
+      const fleets = await res.json();
+      const sel = document.getElementById('fleet_business_id');
+      sel.innerHTML = '<option value="">-- Select Fleet Partner --</option>';
+      for (const f of fleets) {
+        const opt = document.createElement('option');
+        opt.value = f.fleet_business_id;
+        opt.textContent = `${f.business_name} (#${f.fleet_business_id})`;
+        sel.appendChild(opt);
+      }
+    }
+
+    function resetForm() {
+      form.reset();
+      document.getElementById('editing_id').value = '';
+      document.getElementById('form-title').textContent = 'Add Fleet Vehicle';
+      document.getElementById('cancel-btn').style.display = 'none';
+    }
+    document.getElementById('cancel-btn').addEventListener('click', resetForm);
+
+    async function loadVehicles() {
+      clearAlert();
+      const q = encodeURIComponent(document.getElementById('search-input').value.trim());
+      const minCap = encodeURIComponent(document.getElementById('min-cap').value.trim());
+      const res = await fetch(`/api/vehicles?q=${q}&min_capacity=${minCap}`);
+      const rows = await res.json();
+      tbody.innerHTML = '';
+
+      for (const v of rows) {
+        const tr = document.createElement('tr');
+        const fleetLabel = v.business_name ? `${v.business_name} (#${v.fleet_business_id})` : `#${v.fleet_business_id}`;
+        [
+          `#${v.vehicle_id}`,
+          fleetLabel,
+          `${v.make} ${v.model} (${v.type})`,
+          v.model_year,
+          v.license_plate,
+          v.capacity,
+          `$${Number(v.hourly_rate).toFixed(2)}`
+        ].forEach((val) => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+
+        const actionsTd = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.type = 'button';
+        editBtn.onclick = () => {
+          document.getElementById('editing_id').value = v.vehicle_id;
+          document.getElementById('fleet_business_id').value = v.fleet_business_id;
+          document.getElementById('make').value = v.make;
+          document.getElementById('model').value = v.model;
+          document.getElementById('model_year').value = v.model_year;
+          document.getElementById('license_plate').value = v.license_plate;
+          document.getElementById('color').value = v.color || '';
+          document.getElementById('capacity').value = v.capacity;
+          document.getElementById('type').value = v.type;
+          document.getElementById('hourly_rate').value = v.hourly_rate;
+          document.getElementById('vehicle_class').value = v.vehicle_class || '';
+          document.getElementById('fuel_type').value = v.fuel_type || '';
+          document.getElementById('form-title').textContent = `Update Vehicle #${v.vehicle_id}`;
+          document.getElementById('cancel-btn').style.display = 'inline-block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.type = 'button';
+        delBtn.className = 'danger';
+        delBtn.onclick = async () => {
+          if (!confirm(`Delete Vehicle #${v.vehicle_id}?`)) return;
+          const delRes = await fetch(`/api/vehicles/${v.vehicle_id}`, { method: 'DELETE' });
+          if (!delRes.ok) {
+            const err = await delRes.json();
+            return showAlert(err.error || 'Delete failed');
+          }
+          await loadVehicles();
+          showAlert('Vehicle deleted.', 'success');
+        };
+
+        actionsTd.append(editBtn, delBtn);
+        tr.appendChild(actionsTd);
+        tbody.appendChild(tr);
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+      const id = document.getElementById('editing_id').value;
+      const payload = {
+        fleet_business_id: document.getElementById('fleet_business_id').value,
+        make: document.getElementById('make').value.trim(),
+        model: document.getElementById('model').value.trim(),
+        model_year: document.getElementById('model_year').value,
+        license_plate: document.getElementById('license_plate').value.trim(),
+        color: document.getElementById('color').value.trim(),
+        capacity: document.getElementById('capacity').value,
+        type: document.getElementById('type').value.trim(),
+        hourly_rate: document.getElementById('hourly_rate').value,
+        vehicle_class: document.getElementById('vehicle_class').value.trim(),
+        fuel_type: document.getElementById('fuel_type').value.trim()
+      };
+
+      const res = await fetch(id ? `/api/vehicles/${id}` : '/api/vehicles', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) return showAlert(data.error || 'Save failed');
+
+      resetForm();
+      await loadVehicles();
+      showAlert(id ? 'Vehicle updated.' : 'Vehicle added to garage.', 'success');
+    });
+
+    document.getElementById('filter-btn').addEventListener('click', loadVehicles);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      document.getElementById('search-input').value = '';
+      document.getElementById('min-cap').value = '';
+      loadVehicles();
+    });
+
+    loadFleetsDropdown().then(loadVehicles);
+  </script>
+</body>
+</html>

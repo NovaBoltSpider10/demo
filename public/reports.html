@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TourMarket - Reports & Summary</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7fb; color: #333; }
+    .topbar {
+      background: #0056b3;
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; margin-left: 16px; }
+    .container { max-width: 1020px; margin: 32px auto; padding: 0 20px; }
+    h1, h2 { color: #0056b3; margin-top: 0; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .kpi {
+      background: #fff;
+      padding: 18px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border: 1px solid #e6ecf5;
+    }
+    .kpi .label { font-size: 12px; text-transform: uppercase; color: #667085; font-weight: bold; }
+    .kpi .val { font-size: 26px; font-weight: bold; color: #0056b3; margin-top: 6px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    th, td { padding: 12px 14px; border-bottom: 1px solid #e6ecf5; text-align: left; font-size: 14px; }
+    th { background-color: #0056b3; color: white; }
+    .alert { padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; display: none; background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>TourMarket</strong>  |  Operations & Fleet Reports</div>
+    <div>
+      <a href="index.html">All Portals</a>
+      <a href="tour_request.html">Tour Requests</a>
+      <a href="booking.html">Dispatch</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+    <h1>System Overview & Fleet Report</h1>
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <h2>Fleet Performance Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Fleet #</th>
+          <th>Fleet Partner</th>
+          <th>Drivers</th>
+          <th>Vehicles</th>
+          <th>Matched Requests</th>
+          <th>Bookings</th>
+        </tr>
+      </thead>
+      <tbody id="fleet-report-tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    async function loadReport() {
+      const alertEl = document.getElementById('alert');
+      try {
+        const res = await fetch('/api/reports/overview');
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed to load report.');
+
+        const c = data.counts || {};
+        const kpis = [
+          ['Customers', c.customers ?? 0],
+          ['Fleet Partners', c.fleets ?? 0],
+          ['Drivers', c.drivers ?? 0],
+          ['Vehicles', c.vehicles ?? 0],
+          ['Tour Requests', c.tour_requests ?? 0],
+          ['Bookings', c.bookings ?? 0],
+          ['Active Revenue', `$${Number(c.total_booking_revenue ?? 0).toFixed(2)}`]
+        ];
+
+        const grid = document.getElementById('kpi-grid');
+        grid.innerHTML = '';
+        for (const [label, val] of kpis) {
+          const div = document.createElement('div');
+          div.className = 'kpi';
+          div.innerHTML = `<div class="label">${label}</div><div class="val">${val}</div>`;
+          grid.appendChild(div);
+        }
+
+        const tbody = document.getElementById('fleet-report-tbody');
+        tbody.innerHTML = '';
+        for (const f of (data.fleetSummary || [])) {
+          const tr = document.createElement('tr');
+          [
+            `#${f.fleet_business_id}`,
+            f.business_name,
+            f.driver_count,
+            f.vehicle_count,
+            f.matched_requests,
+            f.booking_count
+          ].forEach((val) => {
+            const td = document.createElement('td');
+            td.textContent = val;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        }
+      } catch (err) {
+        alertEl.textContent = err.message;
+        alertEl.style.display = 'block';
+      }
+    }
+
+    loadReport();
+  </script>
+</body>
+</html>

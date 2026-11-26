@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TourMarket - SQL Injection Lab (Assignment #5)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7fb; color: #222; }
+    .topbar {
+      background: #0056b3;
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; margin-left: 16px; }
+    .container { max-width: 1060px; margin: 32px auto; padding: 0 20px; }
+    h1, h2, h3 { color: #0056b3; margin-top: 0; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 24px; }
+    @media (max-width: 780px) { .grid-2 { grid-template-columns: 1fr; } }
+    .card {
+      background: #fff;
+      padding: 22px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border: 1px solid #e6ecf5;
+    }
+    .card.vuln { border-top: 4px solid #c82333; }
+    .card.safe { border-top: 4px solid #198754; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 13px; }
+    input { width: 100%; padding: 9px; border: 1px solid #ccd4e0; border-radius: 6px; font-size: 14px; font-family: inherit; }
+    button {
+      background: #0056b3; color: #fff; padding: 9px 14px; border: none;
+      border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-right: 6px; margin-top: 4px;
+    }
+    button:hover { background: #004085; }
+    button.danger { background: #c82333; }
+    button.danger:hover { background: #a71d2a; }
+    button.safe-btn { background: #198754; }
+    button.safe-btn:hover { background: #146c43; }
+    button.secondary { background: #6c757d; }
+    .sql-box {
+      background: #101828;
+      color: #e4e7ec;
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-family: Consolas, monospace;
+      font-size: 12.5px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-top: 12px;
+    }
+    .sql-label { font-size: 12px; font-weight: bold; color: #667085; text-transform: uppercase; margin-top: 12px; }
+    .alert { padding: 12px 15px; border-radius: 6px; margin-bottom: 18px; display: none; font-size: 14px; }
+    .alert.error { background: #f8d7da; color: #721c24; }
+    .alert.success { background: #d4edda; color: #155724; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    th, td { padding: 11px 13px; border-bottom: 1px solid #e6ecf5; text-align: left; font-size: 13.5px; }
+    th { background: #0056b3; color: #fff; }
+    .payload-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>TourMarket</strong>  |  CS 4347 Assignment #5: SQL Injection Demo</div>
+    <div>
+      <a href="index.html">All Portals</a>
+      <a href="reports.html">Reports</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+
+    <h1>SQL Injection vs. Prepared Statements (Customer Lookup)</h1>
+    <p style="color:#555; margin-top:0;">
+      Compare an intentionally vulnerable string-concatenated <code>SELECT</code> query (Part A) against a parameterized prepared statement (Part B) on the <code>Customer</code> table.
+    </p>
+
+    <div class="grid-2">
+      <!-- PART A: Vulnerable Query -->
+      <div class="card vuln">
+        <h2>Part (a): Vulnerable Lookup Form</h2>
+        <form id="vuln-form">
+          <div class="form-group">
+            <label for="vuln-email">Customer Email</label>
+            <input type="text" id="vuln-email" placeholder="e.g., alice@example.com or ' OR '1'='1">
+          </div>
+          <div class="form-group">
+            <label for="vuln-phone">Customer Phone</label>
+            <input type="text" id="vuln-phone" placeholder="e.g., 2145550101 or ' OR 1=1 -- ">
+          </div>
+          <button type="submit" class="danger">Run Vulnerable SELECT</button>
+          <button type="button" class="secondary" id="fill-sqli-btn">Fill SQLi Payload</button>
+          <button type="button" class="secondary" id="clear-vuln-btn">Clear</button>
+        </form>
+
+        <div class="sql-label">Executed SQL Query (String Concatenation)</div>
+        <div class="sql-box" id="vuln-sql">SELECT customer_user_id, first_name, last_name, email, phone FROM Customer WHERE email = '...' AND phone = '...';</div>
+      </div>
+
+      <!-- PART B: Prepared Statement -->
+      <div class="card safe">
+        <h2>Part (b): Prepared Statement Lookup Form</h2>
+        <form id="safe-form">
+          <div class="form-group">
+            <label for="safe-email">Customer Email</label>
+            <input type="text" id="safe-email" placeholder="Same test input or ' OR '1'='1">
+          </div>
+          <div class="form-group">
+            <label for="safe-phone">Customer Phone</label>
+            <input type="text" id="safe-phone" placeholder="Same test input or ' OR 1=1 -- ">
+          </div>
+          <button type="submit" class="safe-btn">Run Prepared SELECT</button>
+          <button type="button" class="secondary" id="copy-to-safe-btn">Copy Part (a) Inputs</button>
+          <button type="button" class="secondary" id="clear-safe-btn">Clear</button>
+        </form>
+
+        <div class="sql-label">Prepared Template & Bound Parameters</div>
+        <div class="sql-box" id="safe-sql">SELECT customer_user_id, first_name, last_name, email, phone FROM Customer WHERE email = ? AND phone = ?
+params: ["", ""]</div>
+      </div>
+    </div>
+
+    <h2>Query Results (<span id="result-mode">None</span> — <span id="result-count">0</span> rows)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+        </tr>
+      </thead>
+      <tbody id="results-tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const alertEl = document.getElementById('alert');
+    const tbody = document.getElementById('results-tbody');
+
+    function showAlert(msg, type = 'success') {
+      alertEl.textContent = msg;
+      alertEl.className = `alert ${type}`;
+      alertEl.style.display = 'block';
+    }
+    function clearAlert() { alertEl.style.display = 'none'; }
+
+    function renderRows(rows, modeLabel) {
+      document.getElementById('result-mode').textContent = modeLabel;
+      document.getElementById('result-count').textContent = rows.length;
+      tbody.innerHTML = '';
+
+      if (!rows.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 5;
+        td.textContent = 'No matching customer rows returned.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      for (const r of rows) {
+        const tr = document.createElement('tr');
+        [r.customer_user_id, r.first_name, r.last_name, r.email, r.phone].forEach((val) => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+    }
+
+    document.getElementById('fill-sqli-btn').addEventListener('click', () => {
+      document.getElementById('vuln-email').value = "' OR '1'='1";
+      document.getElementById('vuln-phone').value = "' OR '1'='1";
+    });
+
+    document.getElementById('copy-to-safe-btn').addEventListener('click', () => {
+      document.getElementById('safe-email').value = document.getElementById('vuln-email').value;
+      document.getElementById('safe-phone').value = document.getElementById('vuln-phone').value;
+    });
+
+    document.getElementById('clear-vuln-btn').addEventListener('click', () => {
+      document.getElementById('vuln-form').reset();
+      document.getElementById('vuln-sql').textContent = "SELECT customer_user_id, first_name, last_name, email, phone FROM Customer WHERE email = '...' AND phone = '...';";
+    });
+
+    document.getElementById('clear-safe-btn').addEventListener('click', () => {
+      document.getElementById('safe-form').reset();
+      document.getElementById('safe-sql').textContent = 'SELECT customer_user_id, first_name, last_name, email, phone FROM Customer WHERE email = ? AND phone = ?\nparams: ["", ""]';
+    });
+
+    document.getElementById('vuln-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+      const email = document.getElementById('vuln-email').value;
+      const phone = document.getElementById('vuln-phone').value;
+
+      const res = await fetch('/api/sqli-lab/vulnerable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, phone })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.executedSql) {
+        document.getElementById('vuln-sql').textContent = data.executedSql;
+      }
+      if (!res.ok) {
+        renderRows([], 'Part (a) Vulnerable — Error');
+        return showAlert(data.error || 'Query failed.', 'error');
+      }
+      renderRows(data.rows || [], 'Part (a) Vulnerable');
+      showAlert(`Part (a) executed concatenated SQL and returned ${(data.rows || []).length} row(s).`, 'success');
+    });
+
+    document.getElementById('safe-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+      const email = document.getElementById('safe-email').value;
+      const phone = document.getElementById('safe-phone').value;
+
+      const res = await fetch('/api/sqli-lab/prepared', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, phone })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.preparedSql) {
+        document.getElementById('safe-sql').textContent = `${data.preparedSql}\nparams: ${JSON.stringify(data.boundParams || [])}`;
+      }
+      if (!res.ok) {
+        renderRows([], 'Part (b) Prepared — Error');
+        return showAlert(data.error || 'Query failed.', 'error');
+      }
+      renderRows(data.rows || [], 'Part (b) Prepared Statement');
+      showAlert(`Part (b) executed prepared statement with bound parameters and returned ${(data.rows || []).length} row(s).`, 'success');
+    });
+  </script>
+</body>
+</html>
+
